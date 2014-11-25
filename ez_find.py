@@ -13,11 +13,15 @@ file_path = os.getcwd() + '/' + log_name
 with open(file_path) as log:
     logs = log.readlines() 
 
+### Find where the date and time_zone string are 
+date_index = date_conv.findDateIndex(logs[1])
+page_index = date_conv.findPageIndex(logs[1])
+
 ### Get date of the log under consideration
 parsed = logs[1].split(" ")
-parsed[0] = parsed[0].replace("[", "")
-parsed[1] = parsed[1].replace("]", "")
-date_insert = date_conv.convertToDate(parsed[0], parsed[1])
+parsed[date_index] = parsed[date_index].replace("[", "")
+parsed[date_index+1] = parsed[date_index+1].replace("]", "")
+date_insert = date_conv.convertToDate(parsed[date_index], parsed[date_index+1])
 
 ### Convert Command Line Dates into DateTime format
 start_time = datetime.strptime(sys.argv[2], '%H:%M:%S')
@@ -31,23 +35,16 @@ start_time = date_conv.addDate(start_time, date_insert)
 if stop_time < start_time: 
   stop_time = stop_time + timedelta(days=1)
 
-""" Parsed Logs are divided as follows: (for future use)
-    logs_parsed[2] = IP Addresses
-    logs_parsed[3] = TLS Version 
-    logs_parsed[4] = SHA 
-    logs_parsed[5] = GET/POST Method
-    logs_parsed[6] = Page Addresses
-    logs_parsed[7] = HTTP Requests    
-"""
+
 ### Capture the Logs in a Specified Time Frame  
 def returnSpecifiedTimeLogs(read_log):
   #Make an empty list 
   ret_list = []
   for i in range(len(read_log)):
     logs_parsed = read_log[i].split(" ")
-    logs_parsed[0] = logs_parsed[0].replace("[", "") # Date and Time
-    logs_parsed[1] = logs_parsed[1].replace("]", "") # Time Zone 
-    converted_time = date_conv.convertToDate(logs_parsed[0], logs_parsed[1])
+    logs_parsed[date_index] = logs_parsed[date_index].replace("[", "") # Date and Time
+    logs_parsed[date_index + 1] = logs_parsed[date_index + 1].replace("]", "") # Time Zone 
+    converted_time = date_conv.convertToDate(logs_parsed[date_index], logs_parsed[date_index + 1])
     
     #Break Condition inserted for performance improvement for small time windows
     if converted_time > (stop_time + timedelta(hours=1)):
@@ -74,9 +71,10 @@ def main():
   other_hits = 0
   all_hits = 0
   
+  
   for i in range(len(mylogs)):    
     logs_parsed = mylogs[i].split(" ")
-    url = logs_parsed[6]
+    url = logs_parsed[page_index]
          
     if re.match('^/static/', url):
       static_hits += 1
@@ -92,7 +90,8 @@ def main():
       server_hits += 1
     else:
       other_hits += 1
-
+      
+  
   print "==========================================================================" 
   print "/static/ Hits = %s" %static_hits
   print "/static Hits = %s" %static_page_hits
@@ -113,6 +112,7 @@ def main():
   #print "=========================================================================="
   et = time.time()
   print "Total Time: %s seconds." %(et - st)
+  
     
   
 if __name__ == "__main__":

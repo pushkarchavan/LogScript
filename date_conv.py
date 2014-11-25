@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import time
+import re
 
 ### Add Log Date to the command Line input
 def addDate(time_stamp, date_and_time):
@@ -17,3 +18,21 @@ def convertToDate(string_input, time_zone):
   #time_string = converted_date.strftime('%H:%M:%S')
   #logged_time = datetime.strptime(time_string,'%H:%M:%S' )
   return converted_date
+
+def findDateIndex(log_line):
+  str_split1 = log_line.split(" ")
+  
+  for i in range (len(str_split1)): 
+    match = re.search(r'\d{2}/\w{3}/\d{4}', str_split1[i])
+    if match != None:
+      return i
+
+def findPageIndex(log_line):
+  str_split1 = log_line.split(" ")
+  
+  for i in range (len(str_split1)): 
+    mat = re.match ('^/', str_split1[i])
+    if mat != None:
+      return i
+  
+  
